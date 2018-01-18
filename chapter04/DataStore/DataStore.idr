@@ -20,7 +20,6 @@ export
 emptyStore : DataStore
 emptyStore = MkData 0 []
 
-
 -- ACHTUNG! This implementation is slightly different than the text;
 -- as of 1.0, the Idris type checker doesn't appear to like shadowing
 -- of variable names. See https://github.com/idris-lang/Idris-dev/issues/4268
@@ -39,5 +38,11 @@ getEntry : (idx : Integer) ->
 getEntry idx store =
   let current_items = items store in
     case integerToFin idx (size store) of
-      Nothing => Just ("Index out of range", store)
+      Nothing  => Just ("Index out of range", store)
       Just idx => Just (index idx current_items, store)
+
+export
+searchStore : (str : String) ->
+              (store : DataStore) ->
+              List String
+searchStore str store = filter (isInfixOf "a") $ toList $ items store
