@@ -44,5 +44,9 @@ getEntry idx store =
 export
 searchStore : (str : String) ->
               (store : DataStore) ->
-              List String
-searchStore str store = filter (isInfixOf "a") $ toList $ items store
+              List (Integer, String)
+searchStore str store =
+  let itemsWithIndices = zip [0 .. toIntegerNat $ size store] $ toList $ items store in
+    filter isResult itemsWithIndices where
+      isResult : (Integer, String) -> Bool
+      isResult (idx, item) = isInfixOf str item

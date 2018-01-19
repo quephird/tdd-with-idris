@@ -20,7 +20,9 @@ handleAdd item store = Just ("ID: " ++ (show $ size store), addToStore store ite
 handleSearch : String -> DataStore -> Maybe (String, DataStore)
 handleSearch string store =
   let results = searchStore string store in
-  Just (unlines results, store)
+  Just (unlines $ map formatResult results, store) where
+    formatResult : (Integer, String) -> String
+    formatResult (idx, item) = show idx ++ ": " ++ item
 
 handleSize : DataStore -> Maybe (String, DataStore)
 handleSize store = Just ((show $ size store) ++ " item(s)", store)
