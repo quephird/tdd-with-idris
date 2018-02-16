@@ -5,12 +5,14 @@ import Data.Vect
 infixr 5 .+.
 
 public export
-data Schema = SString
+data Schema = SChar
+            | SString
             | SInt
             | (.+.) Schema Schema
 
 public export
 SchemaType : Schema -> Type
+SchemaType SChar     = Char
 SchemaType SString   = String
 SchemaType SInt      = Int
 SchemaType (x .+. y) = (SchemaType x, SchemaType y)
@@ -36,8 +38,9 @@ addToStore (MkData schema size items) newItem = MkData schema _ (addToItems item
                                                 addToItems (item' :: items') = item' :: addToItems items'
 
 displayItem : SchemaType schema -> String
+displayItem {schema = SChar} item   = singleton item
 displayItem {schema = SString} item = item
-displayItem {schema = SInt}    item = show item
+displayItem {schema = SInt} item    = show item
 displayItem {schema = (x .+. y)} (iteml, itemr) = displayItem iteml ++ ", " ++ displayItem itemr
 
 export

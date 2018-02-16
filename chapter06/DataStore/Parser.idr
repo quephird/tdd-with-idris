@@ -24,11 +24,13 @@ parseQuoted _           = Nothing
 -- or if the schema is composite splits the input into two pieces
 -- and attempts to parse left and right sides recursively.
 parseToken : (schema : Schema) -> (input : String) -> Maybe (SchemaType schema, String)
+parseToken SChar input   = case unpack input of
+                                [] => Nothing
+                                c :: cs => Just (c, ltrim $ pack cs)
 parseToken SString input = parseQuoted $ unpack input
-
-parseToken SInt input = case span isDigit input of
-                             ("", _) => Nothing
-                             (headOfInput, restOfInput) => Just (cast headOfInput, ltrim restOfInput)
+parseToken SInt input    = case span isDigit input of
+                                ("", _) => Nothing
+                                (headOfInput, restOfInput) => Just (cast headOfInput, ltrim restOfInput)
 
 parseToken (leftSchema .+. rightSchema) input = do (leftItem, input') <- parseToken leftSchema input
                                                    (rightItem, input'') <- parseToken rightSchema input'
@@ -56,6 +58,10 @@ parseNewItem schema input = case parseToken schema input of
 -- Expects an input schema to be composed only of "String"s and "Int"s;
 -- anything else is rejected and returned as Nothing.
 parseSchema : List String -> Maybe Schema
+parseSchema ("Char" :: rest) = case rest of
+                                    [] => Just SChar
+                                    _  => do restSchema <- parseSchema rest
+                                             Just $ SChar .+. restSchema
 parseSchema ("String" :: rest) = case rest of
                                       [] => Just SString
                                       _  => do restSchema <- parseSchema rest
