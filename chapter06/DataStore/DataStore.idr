@@ -30,11 +30,10 @@ export
 addToStore : (store : DataStore) ->
              SchemaType $ schema store ->
              DataStore
-addToStore (MkData schema size items) newItem =
-  MkData schema _ (addToItems items) where
-    addToItems : Vect n $ SchemaType schema -> Vect (S n) $ SchemaType schema
-    addToItems [] = [newItem]
-    addToItems (item' :: items') = item' :: addToItems items'
+addToStore (MkData schema size items) newItem = MkData schema _ (addToItems items) where
+                                                addToItems : Vect n $ SchemaType schema -> Vect (S n) $ SchemaType schema
+                                                addToItems [] = [newItem]
+                                                addToItems (item' :: items') = item' :: addToItems items'
 
 displayItem : SchemaType schema -> String
 displayItem {schema = SString} item = item
@@ -45,18 +44,7 @@ export
 getEntry : (idx : Integer) ->
            (store : DataStore) ->
            Maybe (String, DataStore)
-getEntry idx store =
-  let current_items = items store in
-    case integerToFin idx (size store) of
-      Nothing  => Just ("Index out of range", store)
-      Just idx => Just (displayItem $ index idx current_items, store)
---
--- export
--- searchStore : (str : String) ->
---               (store : DataStore) ->
---               List (Integer, String)
--- searchStore str store =
---   let itemsWithIndices = zip [0 .. toIntegerNat $ size store] $ toList $ items store in
---     filter isResult itemsWithIndices where
---       isResult : (Integer, String) -> Bool
---       isResult (idx, item) = isInfixOf str item
+getEntry idx store = let current_items = items store in
+                     case integerToFin idx (size store) of
+                          Nothing  => Just ("Index out of range", store)
+                          Just idx => Just (displayItem $ index idx current_items, store)

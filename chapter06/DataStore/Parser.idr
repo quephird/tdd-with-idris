@@ -26,18 +26,13 @@ parseQuoted _           = Nothing
 parseToken : (schema : Schema) -> (input : String) -> Maybe (SchemaType schema, String)
 parseToken SString input = parseQuoted $ unpack input
 
-parseToken SInt input =
-    case span isDigit input of
-         ("", _) => Nothing
-         (headOfInput, restOfInput) => Just (cast headOfInput, ltrim restOfInput)
+parseToken SInt input = case span isDigit input of
+                             ("", _) => Nothing
+                             (headOfInput, restOfInput) => Just (cast headOfInput, ltrim restOfInput)
 
-parseToken (leftSchema .+. rightSchema) input =
-    case parseToken leftSchema input of
-         Nothing => Nothing
-         Just (leftItem, input') =>
-             case parseToken rightSchema input' of
-                  Nothing => Nothing
-                  Just (rightItem, input'') => Just ((leftItem, rightItem), input'')
+parseToken (leftSchema .+. rightSchema) input = do (leftItem, input') <- parseToken leftSchema input
+                                                   (rightItem, input'') <- parseToken rightSchema input'
+                                                   Just ((leftItem, rightItem), input'')
 
 -- For now, this expects input to be a string containing
 -- numeric literals, correspondent with the SInt schema element,
@@ -63,29 +58,24 @@ parseNewItem schema input = case parseToken schema input of
 parseSchema : List String -> Maybe Schema
 parseSchema ("String" :: rest) = case rest of
                                       [] => Just SString
-                                      _  => case parseSchema rest of
-                                                 Nothing => Nothing
-                                                 Just schema => Just $ SString .+. schema
+                                      _  => do restSchema <- parseSchema rest
+                                               Just $ SString .+. restSchema
 parseSchema ("Int" :: rest) = case rest of
                                    [] => Just SInt
-                                   _  => case parseSchema rest of
-                                              Nothing => Nothing
-                                              Just schema => Just $ SInt .+. schema
+                                   _  => do restSchema <- parseSchema rest
+                                            Just $ SInt .+. restSchema
 parseSchema _ = Nothing
 
 -- Expects a command to be a keyword followed by zero or more string tokens
 -- as arguments, and, for certain commands, the arguments have to be
 -- consistent with the schema in question.
 parseCommand : (schema : Schema) -> String -> String -> Maybe $ Command schema
-parseCommand schema "schema" input = case parseSchema $ words input of
-                                          Nothing        => Nothing
-                                          Just newSchema => Just $ SetSchema newSchema
-parseCommand schema "add" input    = case parseNewItem schema input of
-                                          Nothing      => Nothing
-                                          Just newItem => Just $ Add newItem
-parseCommand schema "get" input    = case parsePositive input of
-                                          Just index => Just $ Get index
-                                          Nothing    => Nothing
+parseCommand schema "schema" input = do newSchema <- parseSchema $ words input
+                                        Just $ SetSchema newSchema
+parseCommand schema "add" input    = do newItem <- parseNewItem schema input
+                                        Just $ Add newItem
+parseCommand schema "get" input    = do index <- parsePositive input
+                                        Just $ Get index
 parseCommand schema "size" _       = Just Size
 parseCommand schema "quit" _       = Just Quit
 parseCommand _ _ _                 = Nothing
@@ -93,6 +83,5 @@ parseCommand _ _ _                 = Nothing
 -- Public interface for parsing user input supplied from the REPL
 export
 parse : (schema : Schema) -> String -> Maybe $ Command schema
-parse schema input =
-  case span (/= ' ') input of
-       (cmd, args) => parseCommand schema cmd (ltrim args)
+parse schema input = case span (/= ' ') input of
+                          (cmd, args) => parseCommand schema cmd (ltrim args)
