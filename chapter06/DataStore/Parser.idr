@@ -8,6 +8,7 @@ data Command : Schema -> Type where
      SetSchema : (newSchema : Schema) -> Command schema
      Add : SchemaType schema -> Command schema
      Get : Integer -> Command schema
+     GetAll : Command schema
      Size : Command schema
      Quit : Command schema
 
@@ -80,8 +81,9 @@ parseCommand schema "schema" input = do newSchema <- parseSchema $ words input
                                         Just $ SetSchema newSchema
 parseCommand schema "add" input    = do newItem <- parseNewItem schema input
                                         Just $ Add newItem
-parseCommand schema "get" input    = do index <- parsePositive input
-                                        Just $ Get index
+parseCommand schema "get" input    = case parsePositive input of
+                                          Nothing    => Just GetAll
+                                          Just index => Just $ Get index
 parseCommand schema "size" _       = Just Size
 parseCommand schema "quit" _       = Just Quit
 parseCommand _ _ _                 = Nothing

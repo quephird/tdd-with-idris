@@ -1,5 +1,7 @@
 module Main
 
+import Data.Vect
+
 import DataStore
 import Parser
 
@@ -23,6 +25,11 @@ handleAdd : (store : DataStore) -> SchemaType $ schema store -> Maybe (String, D
 handleAdd store item = let newStore = addToStore store item in
                        Just ("ID: " ++ (show $ size store), newStore)
 
+handleGetAll : (store : DataStore) -> Maybe (String, DataStore)
+handleGetAll store = let displayableItems = map (unpack . displayItem) $ items store
+                         formattedItems = pack $ intercalate ['\n'] $ toList displayableItems in
+                     Just (formattedItems, store)
+
 handleSize : DataStore -> Maybe (String, DataStore)
 handleSize store = Just ((show $ size store) ++ " item(s)", store)
 
@@ -33,6 +40,7 @@ processInput store input =
        Just (SetSchema newSchema) => handleSetSchema store newSchema
        Just (Add item)            => handleAdd store item
        Just (Get idx)             => getEntry idx store
+       Just GetAll                => handleGetAll store
        Just Size                  => handleSize store
        Just Quit                  => Nothing
 

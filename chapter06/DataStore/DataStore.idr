@@ -37,6 +37,7 @@ addToStore (MkData schema size items) newItem = MkData schema _ (addToItems item
                                                 addToItems [] = [newItem]
                                                 addToItems (item' :: items') = item' :: addToItems items'
 
+export
 displayItem : SchemaType schema -> String
 displayItem {schema = SChar} item   = singleton item
 displayItem {schema = SString} item = item
